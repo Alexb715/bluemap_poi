@@ -1,4 +1,7 @@
-marker_file: /bluemap/config/maps/overworld.conf
+marker_files:
+  overworld: /bluemap/config/maps/overworld.conf
+  nether: /bluemap/config/maps/the_nether.conf
+  end: /bluemap/config/maps/the_end.conf
 reload_command: "docker exec minecraft rcon-cli bluemap reload light"
 reload_interval_minutes: 60
 marker_set: "user-pois"

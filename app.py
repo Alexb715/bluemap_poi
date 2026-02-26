@@ -21,6 +21,16 @@ def load_config():
         return yaml.safe_load(f)
 
 
+def get_worlds(cfg):
+    marker_files = cfg.get("marker_files", {})
+    if not marker_files:
+        # backwards compat: single marker_file
+        mf = cfg.get("marker_file", "")
+        if mf:
+            return {"overworld": mf}
+    return marker_files
+
+
 def slugify(name):
     slug = name.lower().strip()
     slug = re.sub(r"[^a-z0-9]+", "-", slug)
@@ -28,8 +38,7 @@ def slugify(name):
     return slug or "marker"
 
 
-def read_marker_conf(cfg):
-    marker_file = cfg["marker_file"]
+def read_marker_conf(marker_file):
     if os.path.exists(marker_file):
         return ConfigFactory.parse_file(marker_file)
     return ConfigFactory.parse_string("")
@@ -91,9 +100,9 @@ def make_unique_id(conf, cfg, base_slug):
     return slug
 
 
-def add_marker(cfg, name, x, y, z):
+def add_marker(cfg, marker_file, name, x, y, z):
     global dirty
-    conf = read_marker_conf(cfg)
+    conf = read_marker_conf(marker_file)
     conf = ensure_marker_set(conf, cfg)
 
     ms = cfg["marker_set"]
@@ -116,7 +125,7 @@ def add_marker(cfg, name, x, y, z):
     merged = new_conf.with_fallback(conf)
 
     hocon_str = HOCONConverter.to_hocon(merged)
-    with open(cfg["marker_file"], "w") as f:
+    with open(marker_file, "w") as f:
         f.write(hocon_str)
 
     with dirty_lock:
@@ -148,24 +157,34 @@ def reload_worker(cfg):
 @app.route("/", methods=["GET"])
 def index():
     cfg = load_config()
-    try:
-        conf = read_marker_conf(cfg)
-        markers = get_existing_markers(conf, cfg)
-    except Exception:
-        markers = []
-    return render_template("index.html", markers=markers)
+    worlds = get_worlds(cfg)
+    markers_by_world = {}
+    for world_name, marker_file in worlds.items():
+        try:
+            conf = read_marker_conf(marker_file)
+            markers_by_world[world_name] = get_existing_markers(conf, cfg)
+        except Exception:
+            markers_by_world[world_name] = []
+    return render_template("index.html", worlds=list(worlds.keys()), markers_by_world=markers_by_world)
 
 
 @app.route("/add", methods=["POST"])
 def add_poi():
     cfg = load_config()
+    worlds = get_worlds(cfg)
+
     name = request.form.get("name", "").strip()
+    world = request.form.get("world", "").strip()
     x = request.form.get("x", "").strip()
     y = request.form.get("y", "").strip()
     z = request.form.get("z", "").strip()
 
     if not name:
         flash("POI name is required.", "error")
+        return redirect(url_for("index"))
+
+    if world not in worlds:
+        flash("Invalid world selected.", "error")
         return redirect(url_for("index"))
 
     try:
@@ -177,8 +196,8 @@ def add_poi():
         return redirect(url_for("index"))
 
     try:
-        add_marker(cfg, name, x, y, z)
-        flash(f'Added POI "{name}" at {x}, {y}, {z}.', "success")
+        add_marker(cfg, worlds[world], name, x, y, z)
+        flash(f'Added POI "{name}" at {x}, {y}, {z} in {world}.', "success")
     except Exception as e:
         flash(f"Error adding POI: {e}", "error")
 
