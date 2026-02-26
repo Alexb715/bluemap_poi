@@ -7,7 +7,10 @@ A simple web app for adding POI markers to a BlueMap Minecraft server map. Submi
 Copy and edit `config.yaml`:
 
 ```yaml
-marker_file: /path/to/bluemap/config/maps/overworld.conf
+marker_files:
+  overworld: /path/to/bluemap/config/maps/overworld.conf
+  nether: /path/to/bluemap/config/maps/the_nether.conf
+  end: /path/to/bluemap/config/maps/the_end.conf
 reload_command: "rcon-cli bluemap reload light"
 reload_interval_minutes: 60
 marker_set: "user-pois"
@@ -16,7 +19,7 @@ marker_set_label: "User POIs"
 
 | Option | Description |
 |---|---|
-| `marker_file` | Path to the BlueMap `.conf` file |
+| `marker_files` | Map of world names to their BlueMap `.conf` files |
 | `reload_command` | Shell command to reload BlueMap after changes |
 | `reload_interval_minutes` | Minutes between reload checks (only reloads if POIs were added) |
 | `marker_set` | HOCON key for the marker-set to store POIs in |
@@ -32,7 +35,10 @@ Run directly on the same machine as your Minecraft server. No socket mounting ne
 
 ```yaml
 # config.yaml
-marker_file: /opt/bluemap/config/maps/overworld.conf
+marker_files:
+  overworld: /opt/bluemap/config/maps/overworld.conf
+  nether: /opt/bluemap/config/maps/the_nether.conf
+  end: /opt/bluemap/config/maps/the_end.conf
 reload_command: "rcon-cli bluemap reload light"
 ```
 
@@ -45,7 +51,10 @@ python app.py
 
 ```yaml
 # config.yaml
-marker_file: /bluemap/config/maps/overworld.conf
+marker_files:
+  overworld: /bluemap/config/maps/overworld.conf
+  nether: /bluemap/config/maps/the_nether.conf
+  end: /bluemap/config/maps/the_end.conf
 reload_command: "docker exec minecraft rcon-cli bluemap reload light"
 ```
 
@@ -73,7 +82,10 @@ docker compose up -d
 
 ```yaml
 # config.yaml
-marker_file: /bluemap/config/maps/overworld.conf
+marker_files:
+  overworld: /bluemap/config/maps/overworld.conf
+  nether: /bluemap/config/maps/the_nether.conf
+  end: /bluemap/config/maps/the_end.conf
 reload_command: "podman exec minecraft rcon-cli bluemap reload light"
 ```
 
@@ -108,4 +120,4 @@ This works from any setup (bare metal, Docker, Podman, VM) as long as the RCON p
 
 ## Usage
 
-Open `http://localhost:5000`, fill in a POI name and coordinates, and submit. The marker is written to the `.conf` file immediately. BlueMap reloads automatically on the configured interval (only if new POIs were added).
+Open `http://localhost:5000`, select a world, fill in a POI name and coordinates, and submit. The marker is written to the `.conf` file immediately. BlueMap reloads automatically on the configured interval (only if new POIs were added).
