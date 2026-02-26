@@ -1,0 +1,5 @@
+marker_file: /bluemap/config/maps/overworld.conf
+reload_command: "docker exec minecraft rcon-cli bluemap reload light"
+reload_interval_minutes: 60
+marker_set: "user-pois"
+marker_set_label: "User POIs"

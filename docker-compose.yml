@@ -1,0 +1,10 @@
+services:
+  poi-editor:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - /path/to/bluemap/config:/bluemap/config
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
